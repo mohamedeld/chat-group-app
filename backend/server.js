@@ -10,9 +10,23 @@ const server = http.createServer(app);
 app.use(cors());
 app.use(express.json());
 
+
 const io = socketIo(server)
+
+const chatRooms = {};
+
 io.on("connection",(socket)=>{
     console.log("Connectd to socket.io");
+    socket.on("join",(chatId)=>{
+        socket.join(chatId);
+        if(!chatRooms[chatId]){
+            chatRooms[chatId] = [];
+        }
+        chatRooms[chatId].push(socket.id);
+    })
+    socket.on("message",message=>{
+        io.to(message?.chatId).emit("message",message);        
+    })
 
     socket.on("disconnect",()=>{
         console.log("User disconnected");

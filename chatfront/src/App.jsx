@@ -1,25 +1,55 @@
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import './App.css'
 import MessageInput from './components/MessageInput';
 import socket from './socket';
+import {v4 as uuid} from "uuid";
+
 function App() {
     const [messages,setMessages] = useState([]);
+    const [chatId,setChatId] = useState("");
 
+    const generateChatId = ()=>{
+        const chatId =uuid();
+        window.history.pushState(null, '', `/?chatId=${chatId}`); // Update the URL without reloading
+        setChatId(chatId);
+    }
+
+
+    useEffect(()=>{
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const chatId = urlParams.get("chatId");
+        setChatId(chatId);
+        socket.emit("join",chatId)
+    },[])
     const handleSendMessage = useCallback((message)=>{
         if(message.trim() === "") return;
         const newMessage = {
             id:crypto.randomUUID(),
             message,
+            chatId,
             sender:"You",
             timestamp:new Date().getTime()
         }
-        setMessages(prev => [...prev,newMessage]);
+        socket.emit("message",newMessage);
+    },[chatId])
+
+    useEffect(()=>{
+        const handleMessage = (message)=>{
+            setMessages(prev => [...prev,message]);
+        }
+        socket.on("message",handleMessage)
+        return ()=>{
+            socket.off("message", handleMessage);
+        }
     },[])
-    console.log("selcome")
   return (
     <div className='p-3'>
         <div className="flex flex-col h-screen gap-3">
+            <div className='flex justify-end'>
+            <button className='w-fit  bg-amber-500 text-white font-semibold cursor-pointer py-3 px-8 rounded-md hover:bg-amber-600' onClick={generateChatId}>New Chat</button>
+            </div>
             <div className="flex-1 overflow-auto p-4">
                 {messages?.map((msg,index) => (
                     <div key={index} className={`flex gap-2 ${msg?.sender === "You" ? "justify-end" : ""}`}>

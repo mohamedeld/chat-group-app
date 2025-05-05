@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 const MessageInput = ({handleSendMessage}) => {
-        const [message,setMessage] = useState("");
+        const [message,setMessage] = useState("")
 
         const handleSend = ()=>{
             handleSendMessage(message);
