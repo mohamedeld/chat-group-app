@@ -10,6 +10,7 @@ import EmailForm from './EmailForm';
 function App() {
     const [messages,setMessages] = useState([]);
     const [chatId,setChatId] = useState("");
+    const [token,setToken] = useState("");
     const {isLoggedIn} = useAuth();
     const generateChatId = ()=>{
         const chatId =uuid();
@@ -18,8 +19,9 @@ function App() {
     }
 
 
-    useEffect(()=>{
-
+    useEffect(()=>{ 
+        const tokenData = JSON.parse(localStorage.getItem("user"));
+        setToken(tokenData?.token);
         const urlParams = new URLSearchParams(window.location.search);
         const chatId = urlParams.get("chatId");
         setChatId(chatId);
@@ -34,8 +36,10 @@ function App() {
             sender:"You",
             timestamp:new Date().getTime()
         }
-        socket.emit("message",newMessage);
-    },[chatId])
+        socket.emit("message",{
+            token,
+            message:newMessage});
+    },[chatId,token])
 
     useEffect(()=>{
         const handleMessage = (message)=>{

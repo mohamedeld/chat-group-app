@@ -1,9 +1,10 @@
 
 
 const useAuth = ()=>{
-    const token = localStorage.getItem("userAuth");
+    const user = localStorage.getItem("user");
+    const userData = JSON.parse(user);
     return {
-        isLoggedIn:token ? true : false
+        isLoggedIn:userData?.id ? true : false
     }
 }
 

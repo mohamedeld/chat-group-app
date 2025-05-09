@@ -2,11 +2,13 @@ const express = require("express");
 const http = require("http");
 require("dotenv").config();
 const cors = require("cors");
+const jwt = require("jsonwebtoken")
 const socketIo = require("socket.io");
 const connectDb = require("./connectDb");
 const globalError = require("./middlewares/globalError")
 const resendEmail = require("./services/sendEmail");
 const User = require("./models/user");
+const verifyToken = require("./services/verifyToken");
 const app = express();
 const server = http.createServer(app);
 
@@ -30,7 +32,6 @@ io.on("connection",(socket)=>{
 
     socket.on("login",async (email)=>{
         try{
-            console.log("email ",email)
             const [user,created] =await  User.findOrCreate({
             where:{
                 email
@@ -38,10 +39,17 @@ io.on("connection",(socket)=>{
             defaults:{
                 email
             }
-        })
+        });
+        let token;
+        if(user){
+            token = jwt.sign({id:user?.dataValues?.id},process.env.SECRET_KEY,{
+                expiresIn:'90d'
+            })
+        }
         socket.emit("userCreated",{
             id:user?.dataValues?.id,
             email:user?.dataValues?.email,
+            token
         })
         }catch(error){
 
@@ -54,8 +62,15 @@ io.on("connection",(socket)=>{
         }
         chatRooms[chatId].push(socket.id);
     })
-    socket.on("message",message=>{
-        io.to(message?.chatId).emit("message",message);        
+    socket.on("message",data=>{
+        const id = verifyToken(data?.token)
+        if(!id){
+            return;
+        } 
+        if(data?.message?.chatId){
+            io.to(data?.message?.chatId).emit("message",data?.message);        
+        }
+        io.bro       
     })
 
     socket.on("disconnect",()=>{

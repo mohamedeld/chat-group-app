@@ -17,8 +17,8 @@ const EmailForm = () => {
 
     useEffect(()=>{
         socket.on("userCreated",data=>{
-            console.log("first",data)
-            localStorage.setItem("user",JSON.stringify(data))
+            localStorage.setItem("user",JSON.stringify(data));
+            window.location.replace("/")
         })
     },[socket])
   return (
