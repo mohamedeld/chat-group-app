@@ -4,11 +4,13 @@ import './App.css'
 import MessageInput from './components/MessageInput';
 import socket from './socket';
 import {v4 as uuid} from "uuid";
+import useAuth from './hooks/useAuth';
+import EmailForm from './EmailForm';
 
 function App() {
     const [messages,setMessages] = useState([]);
     const [chatId,setChatId] = useState("");
-
+    const {isLoggedIn} = useAuth();
     const generateChatId = ()=>{
         const chatId =uuid();
         window.history.pushState(null, '', `/?chatId=${chatId}`); // Update the URL without reloading
@@ -46,6 +48,8 @@ function App() {
     },[])
   return (
     <div className='p-3'>
+        {
+            isLoggedIn ? 
         <div className="flex flex-col h-screen gap-3">
             <div className='flex justify-end'>
             <button className='w-fit  bg-amber-500 text-white font-semibold cursor-pointer py-3 px-8 rounded-md hover:bg-amber-600' onClick={generateChatId}>New Chat</button>
@@ -63,7 +67,10 @@ function App() {
             <div  className="my-5 flex items-center gap-1">
                 <MessageInput handleSendMessage={handleSendMessage}/>
             </div>
-        </div>
+        </div>: (
+            <EmailForm/>
+        )
+        }
     </div>
   )
 }
